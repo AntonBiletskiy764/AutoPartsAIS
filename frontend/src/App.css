@@ -1,0 +1,254 @@
+/* =========================================
+   БАЗОВІ СТИЛІ ТА КОНТЕЙНЕРИ
+========================================= */
+body {
+  margin: 0;
+  background-color: #f1f5f9;
+  color: #334155;
+  font-family: "Segoe UI", Tahoma, Geneva, sans-serif;
+}
+
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+/* =========================================
+   ЕКРАН АВТОРИЗАЦІЇ
+========================================= */
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f1f5f9;
+}
+
+.login-card {
+  background-color: white;
+  padding: 40px;
+  border-radius: 4px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 350px;
+}
+
+.login-error {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  padding: 10px;
+  border-radius: 3px;
+  margin-bottom: 15px;
+  border: 1px solid #fecaca;
+  text-align: center;
+  font-size: 13px;
+}
+
+/* =========================================
+   ШАПКА (HEADER) ТА КАРТКИ
+========================================= */
+.header-panel {
+  background-color: #1e293b;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.card {
+  background-color: white;
+  padding: 24px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* =========================================
+   ФОРМИ ТА ЕЛЕМЕНТИ ВВОДУ
+========================================= */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 180px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.form-control {
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 3px;
+  font-size: 14px;
+  outline: none;
+  background-color: #fff;
+  color: #0f172a;
+}
+
+.form-control:focus {
+  border-color: #2563eb;
+  box-shadow: inset 0 0 0 1px #2563eb;
+}
+
+/* =========================================
+   КНОПКИ
+========================================= */
+.btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: 0.2s;
+  color: white;
+}
+
+.btn-primary { background-color: #2563eb; }
+.btn-primary:hover { background-color: #1d4ed8; }
+
+.btn-warning { background-color: #ea580c; }
+.btn-warning:hover { background-color: #c2410c; }
+
+.btn-secondary { background-color: #64748b; }
+.btn-secondary:hover { background-color: #475569; }
+
+.btn-danger { background-color: #dc2626; }
+.btn-danger:hover { background-color: #b91c1c; }
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  background-color: transparent;
+}
+.btn-sm-primary { color: #2563eb; border: 1px solid #2563eb; background-color: #eff6ff;}
+.btn-sm-secondary { color: #64748b; border: 1px solid #64748b; background-color: #f8fafc;}
+.btn-sm-danger { color: #dc2626; border: 1px solid #dc2626; background-color: #fef2f2;}
+
+/* =========================================
+   ВКЛАДКИ (TABS)
+========================================= */
+.tabs-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #cbd5e1;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.tab {
+  background-color: #f8fafc;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px 4px 0 0;
+  padding: 10px 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.tab.active {
+  background-color: #2563eb;
+  color: white;
+  border: 1px solid #2563eb;
+  border-bottom: none;
+  font-weight: 600;
+  cursor: default;
+}
+
+/* =========================================
+   ТАБЛИЦЯ ТА СТАТУСИ
+========================================= */
+.table-container {
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+thead { background-color: #f8fafc; border-bottom: 1px solid #cbd5e1; }
+th { padding: 14px 16px; text-align: left; font-size: 13px; text-transform: uppercase; color: #475569; letter-spacing: 0.5px; }
+td { padding: 12px 16px; vertical-align: middle; font-size: 14px; border-bottom: 1px solid #e2e8f0; }
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badge-red { background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.badge-green { background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+/* =========================================
+   ТЕРМІНАЛ СКАНЕРА
+========================================= */
+.scanner-box {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.scanner-input {
+  padding: 20px;
+  font-size: 24px;
+  text-align: center;
+  width: 100%;
+  max-width: 300px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  outline: none;
+  margin-bottom: 20px;
+}
+.scanner-input.blue { border: 3px solid #2563eb; }
+.scanner-input.orange { border: 3px solid #ea580c; text-transform: uppercase; }
+
+/* =========================================
+   МОДАЛЬНЕ ВІКНО
+========================================= */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000; backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  background-color: white;
+  padding: 24px;
+  border-radius: 4px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
