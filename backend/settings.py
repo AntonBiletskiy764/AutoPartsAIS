@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-15*op!=#-y+!0@=y@!fw&4mw@!th88rt5pc-&buya)8!=5k6nq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -83,7 +83,7 @@ DATABASES = {
         'NAME': 'AutoPartsDB',
         'ENFORCE_SCHEMA': False,
         'CLIENT': {
-            'host': 'mongodb://localhost:27017'
+            'host': 'mongodb+srv://antonbiletsky764_db_user:rvogt6omz0@cluster0.gce5u06.mongodb.net/?appName=Cluster0'
         }
     }
 }
