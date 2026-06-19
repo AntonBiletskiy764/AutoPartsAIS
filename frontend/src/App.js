@@ -25,6 +25,8 @@ function App() {
   const [movingPart, setMovingPart] = useState(null);
   const [moveLoc, setMoveLoc] = useState({ floor: 'A', row: '1', section: '1', level: '1' });
   const [activeTab, setActiveTab] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const [scanStep, setScanStep] = useState(1);
   const [scannedPart, setScannedPart] = useState(null);
@@ -129,6 +131,9 @@ function App() {
   };
 
   const handleScanArticleKeyDown = (e) => {
+    if (['-', '+', 'e', 'E', '.', ','].includes(e.key)) {
+      e.preventDefault(); // Забороняємо введення недозволених символів
+    }
     if (e.key === 'Enter') {
       e.preventDefault();
       processScanArticle();
@@ -151,6 +156,51 @@ function App() {
     } catch (error) {
       setScanError(`❌ Помилка сервера. Спробуйте ще раз.`);
     }
+  };
+
+  // РОЗУМНА МАСКА КОМІРКИ (Літера, Макс 05, Макс 20, Макс 05)
+  const handleLocationFormat = (e) => {
+    let rawValue = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    let formattedValue = '';
+
+    // 1. Перший символ - літера
+    if (rawValue.length > 0) {
+      const firstChar = rawValue.charAt(0);
+      if (/[A-Z]/.test(firstChar)) {
+        formattedValue += firstChar;
+      } else {
+        return;
+      }
+    }
+
+    const digits = rawValue.slice(1).replace(/[^0-9]/g, '');
+
+    // 2. Ряд (макс 05)
+    if (digits.length > 0) {
+      let block1 = digits.substring(0, 2);
+      if (block1.length === 1 && parseInt(block1) > 5) block1 = '05';
+      if (block1.length === 2 && parseInt(block1) > 5) block1 = '05';
+      formattedValue += block1;
+    }
+
+    // 3. Секція (макс 20)
+    if (digits.length > 2) {
+      formattedValue += '-';
+      let block2 = digits.substring(2, 4);
+      if (block2.length === 2 && parseInt(block2) > 20) block2 = '20';
+      formattedValue += block2;
+    }
+
+    // 4. Рівень (макс 05)
+    if (digits.length > 4) {
+      formattedValue += '-';
+      let block3 = digits.substring(4, 6);
+      if (block3.length === 1 && parseInt(block3) > 5) block3 = '05';
+      if (block3.length === 2 && parseInt(block3) > 5) block3 = '05';
+      formattedValue += block3;
+    }
+
+    setScanLocation(formattedValue);
   };
 
   const handleScanLocationKeyDown = (e) => {
@@ -180,6 +230,7 @@ function App() {
     setFormData({ ...part, locType, locFloor, locRow, locSection, locLevel });
     setIsEditing(true);
     setEditId(part.id);
+    setShowAddForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -187,6 +238,7 @@ function App() {
     setIsEditing(false);
     setEditId(null);
     setFormData(initialFormState);
+    setShowAddForm(false);
   };
 
   const openMoveModal = (part) => {
@@ -225,8 +277,23 @@ function App() {
   };
 
   const filteredParts = parts.filter(part => {
-    if (activeTab === 'RB01') return part.location === 'RB01';
-    if (activeTab === 'PLACED') return part.location !== 'RB01';
+    // 1. Фільтруємо по вкладках
+    let matchesTab = true;
+    if (activeTab === 'RB01') matchesTab = part.location === 'RB01';
+    if (activeTab === 'PLACED') matchesTab = part.location !== 'RB01';
+    
+    if (!matchesTab) return false;
+
+    // 2. Застосовуємо пошук для Адміна
+    if (user.role === 'ADMIN' && searchTerm.trim() !== '') {
+      const term = searchTerm.toLowerCase();
+      const nameStr = part.name ? part.name.toLowerCase() : '';
+      const articleStr = part.article ? part.article.toLowerCase() : '';
+      const locStr = part.location ? part.location.toLowerCase() : '';
+
+      return nameStr.includes(term) || articleStr.includes(term) || locStr.includes(term);
+    }
+
     return true; 
   });
 
@@ -268,38 +335,61 @@ function App() {
       </div>
 
       {user.role === 'ADMIN' && (
-        <form onSubmit={handleSubmit} className="card">
-          <h3 style={{ marginTop: 0, color: isEditing ? '#ea580c' : '#0f172a' }}>
-            {isEditing ? '✏️ Редагування запису' : '➕ Реєстрація товарної одиниці'}
-          </h3>
-          <div className="form-row">
-            <div className="form-group"><label className="form-label">Артикул</label><input name="article" value={formData.article} onChange={handleInputChange} required className="form-control" disabled={isEditing}/></div>
-            <div className="form-group"><label className="form-label">Назва деталі</label><input name="name" value={formData.name} onChange={handleInputChange} required className="form-control" /></div>
-            <div className="form-group"><label className="form-label">Категорія</label><input name="category" value={formData.category} onChange={handleInputChange} required className="form-control" /></div>
-            <div className="form-group"><label className="form-label">Кількість (шт)</label><input name="quantity" type="number" value={formData.quantity} onChange={handleInputChange} required className="form-control" /></div>
-            
-            <div className="form-group" style={{ flex: '1 1 100%', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-              <label className="form-label">Місцезнаходження на складі:</label>
-              <select name="locType" value={formData.locType} onChange={handleInputChange} className="form-control" style={{width: '300px', marginBottom: '15px'}}>
-                <option value="RB01">Зона надходження (Тимчасово - RB01)</option>
-                <option value="STANDARD">Адресне місце зберігання (Полиця)</option>
-              </select>
-              {formData.locType === 'STANDARD' && (
-                <div className="form-row">
-                  <div><label className="form-label">Поверх:</label><select name="locFloor" value={formData.locFloor} onChange={handleInputChange} className="form-control">{FLOORS.map(f => <option key={f}>{f}</option>)}</select></div>
-                  <div><label className="form-label">Ряд:</label><select name="locRow" value={formData.locRow} onChange={handleInputChange} className="form-control">{ROWS.map(r => <option key={r}>{r}</option>)}</select></div>
-                  <div><label className="form-label">Секція:</label><select name="locSection" value={formData.locSection} onChange={handleInputChange} className="form-control">{SECTIONS.map(s => <option key={s}>{s}</option>)}</select></div>
-                  <div><label className="form-label">Рівень:</label><select name="locLevel" value={formData.locLevel} onChange={handleInputChange} className="form-control">{LEVELS.map(l => <option key={l}>{l}</option>)}</select></div>
-                </div>
-              )}
-            </div>
-            
-            <div style={{ display: 'flex', gap: '12px', flex: '1 1 100%', marginTop: '8px' }}>
-              <button type="submit" className={isEditing ? "btn btn-warning" : "btn btn-primary"}>{isEditing ? 'Зберегти зміни' : 'Внести до реєстру'}</button>
-              {isEditing && <button type="button" onClick={handleCancelEdit} className="btn btn-secondary">Скасувати</button>}
-            </div>
+        <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: '20px' }}>
+          {/* КЛІКАБЕЛЬНА ШАПКА ШТОРКИ */}
+          <div 
+            onClick={() => setShowAddForm(!showAddForm)}
+            style={{ 
+              padding: '15px 20px', 
+              cursor: 'pointer', 
+              backgroundColor: isEditing ? '#fff7ed' : '#f8fafc', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              borderBottom: showAddForm ? '1px solid #e2e8f0' : 'none'
+            }}
+          >
+            <h3 style={{ margin: 0, color: isEditing ? '#ea580c' : '#0f172a', fontSize: '1.1rem' }}>
+              {isEditing ? '✏️ Редагування запису' : '➕ Реєстрація товарної одиниці'}
+            </h3>
+            <span style={{ fontSize: '1.2rem', color: '#64748b' }}>
+              {showAddForm ? '▲' : '▼'}
+            </span>
           </div>
-        </form>
+
+          {/* САМА ФОРМА (ПОКАЗУЄТЬСЯ ТІЛЬКИ ЯКЩО showAddForm === true) */}
+          {showAddForm && (
+            <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
+              <div className="form-row">
+                <div className="form-group"><label className="form-label">Артикул</label><input name="article" value={formData.article} onChange={handleInputChange} required className="form-control" disabled={isEditing}/></div>
+                <div className="form-group"><label className="form-label">Назва деталі</label><input name="name" value={formData.name} onChange={handleInputChange} required className="form-control" /></div>
+                <div className="form-group"><label className="form-label">Категорія</label><input name="category" value={formData.category} onChange={handleInputChange} required className="form-control" /></div>
+                <div className="form-group"><label className="form-label">Кількість (шт)</label><input name="quantity" type="number" value={formData.quantity} onChange={handleInputChange} required className="form-control" /></div>
+                
+                <div className="form-group" style={{ flex: '1 1 100%', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                  <label className="form-label">Місцезнаходження на складі:</label>
+                  <select name="locType" value={formData.locType} onChange={handleInputChange} className="form-control" style={{width: '300px', marginBottom: '15px'}}>
+                    <option value="RB01">Зона надходження (Тимчасово - RB01)</option>
+                    <option value="STANDARD">Адресне місце зберігання (Полиця)</option>
+                  </select>
+                  {formData.locType === 'STANDARD' && (
+                    <div className="form-row">
+                      <div><label className="form-label">Поверх:</label><select name="locFloor" value={formData.locFloor} onChange={handleInputChange} className="form-control">{FLOORS.map(f => <option key={f}>{f}</option>)}</select></div>
+                      <div><label className="form-label">Ряд:</label><select name="locRow" value={formData.locRow} onChange={handleInputChange} className="form-control">{ROWS.map(r => <option key={r}>{r}</option>)}</select></div>
+                      <div><label className="form-label">Секція:</label><select name="locSection" value={formData.locSection} onChange={handleInputChange} className="form-control">{SECTIONS.map(s => <option key={s}>{s}</option>)}</select></div>
+                      <div><label className="form-label">Рівень:</label><select name="locLevel" value={formData.locLevel} onChange={handleInputChange} className="form-control">{LEVELS.map(l => <option key={l}>{l}</option>)}</select></div>
+                    </div>
+                  )}
+                </div>
+                
+                <div style={{ display: 'flex', gap: '12px', flex: '1 1 100%', marginTop: '8px' }}>
+                  <button type="submit" className={isEditing ? "btn btn-warning" : "btn btn-primary"}>{isEditing ? 'Зберегти зміни' : 'Внести до реєстру'}</button>
+                  {isEditing && <button type="button" onClick={handleCancelEdit} className="btn btn-secondary">Скасувати</button>}
+                </div>
+              </div>
+            </form>
+          )}
+        </div>
       )}
 
       <div className="tabs-nav">
@@ -336,8 +426,11 @@ function App() {
               <h2 style={{ margin: '0 0 20px 0' }}>Крок 2/2</h2>
               <input 
                 ref={locationInputRef} type="text"
-                value={scanLocation} onChange={(e) => setScanLocation(e.target.value)} onKeyDown={handleScanLocationKeyDown}
-                placeholder="Комірка (A-1-1-1)" className="scanner-input orange"
+                value={scanLocation} 
+                onChange={handleLocationFormat} /* ТУТ ПІДКЛЮЧЕНО НОВУ МАСКУ */
+                onKeyDown={handleScanLocationKeyDown}
+                placeholder="Комірка (A05-20-05)" /* ТУТ ЗМІНЕНО ПЛЕЙСХОЛДЕР */
+                className="scanner-input orange"
               />
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={resetScanner} className="btn btn-secondary" style={{ flex: 1 }}>↩ Назад</button>
@@ -350,6 +443,21 @@ function App() {
 
       {activeTab !== 'SCANNER' && (
         <div className="table-container">
+          
+          {/* БЛОК ПОШУКУ ДЛЯ АДМІНІСТРАТОРА */}
+          {user.role === 'ADMIN' && (
+            <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+              <input
+                type="text"
+                placeholder="🔍 Пошук по артикулу, назві або зоні (напр. RB01)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-control"
+                style={{ width: '100%', border: '2px solid #3b82f6' }}
+              />
+            </div>
+          )}
+
           <table>
             <thead>
               <tr>
