@@ -50,7 +50,7 @@ function App() {
 
   const fetchParts = async () => {
     try {
-      const response = await axios.get('https://autopartsais-wms.onrender.com/api/parts/');
+      const response = await axios.get('https://autopartsais.onrender.com/api/parts/');
       setParts(response.data);
     } catch (error) {
       console.error("Помилка завантаження", error);
@@ -110,11 +110,11 @@ function App() {
 
     try {
       if (isEditing) {
-        await axios.put(`https://autopartsais-wms.onrender.com/api/parts/${editId}/`, payload);
+        await axios.put(`https://autopartsais.onrender.com/api/parts/${editId}/`, payload);
         setIsEditing(false);
         setEditId(null);
       } else {
-        await axios.post('https://autopartsais-wms.onrender.com/api/parts/', payload);
+        await axios.post('https://autopartsais.onrender.com/api/parts/', payload);
       }
       setFormData(initialFormState);
       fetchParts();
@@ -151,7 +151,7 @@ function App() {
     if (!scanLocation.trim() || !scannedPart) return;
     try {
       const updatedPart = { ...scannedPart, location: scanLocation.trim().toUpperCase() };
-      await axios.put(`https://autopartsais-wms.onrender.com/api/parts/${scannedPart.id}/`, updatedPart);
+      await axios.put(`https://autopartsais.onrender.com/api/parts/${scannedPart.id}/`, updatedPart);
       
       alert(`📦 Успішно! "${scannedPart.name}" розміщено в ${scanLocation.toUpperCase()}.`);
       fetchParts();
@@ -259,7 +259,7 @@ function App() {
     const newLocation = `${moveLoc.floor}-${moveLoc.row}-${moveLoc.section}-${moveLoc.level}`;
     try {
       const updatedPart = { ...movingPart, location: newLocation };
-      await axios.put(`https://autopartsais-wms.onrender.com/api/parts/${movingPart.id}/`, updatedPart);
+      await axios.put(`https://autopartsais.onrender.com/api/parts/${movingPart.id}/`, updatedPart);
       setMovingPart(null);
       fetchParts();
     } catch (error) {
@@ -270,7 +270,7 @@ function App() {
   const handleDelete = async (id) => {
     if (window.confirm("Ви впевнені, що хочете списати запис з бази?")) {
       try {
-        await axios.delete(`https://autopartsais-wms.onrender.com/api/parts/${id}/`);
+        await axios.delete(`https://autopartsais.onrender.com/api/parts/${id}/`);
         fetchParts();
       } catch (error) {
         alert("Помилка видалення.");
@@ -516,6 +516,5 @@ function App() {
       )}
     </div>
   );
-}
 
 export default App;
