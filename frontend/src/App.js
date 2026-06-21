@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import './App.css'; // ПІДКЛЮЧАЄМО НАШ НОВИЙ ФАЙЛ ЗІ СТИЛЯМИ
+import './App.css'; 
 
 const FLOORS = ['A', 'B'];
 const ROWS = [1, 2, 3, 4, 5];
@@ -50,7 +50,7 @@ function App() {
 
   const fetchParts = async () => {
     try {
-      const response = await axios.get('https://autopartsais.onrender.com/api/parts/');
+      const response = await axios.get('https://autopartsais-wms.onrender.com/api/parts/');
       setParts(response.data);
     } catch (error) {
       console.error("Помилка завантаження", error);
@@ -87,6 +87,13 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ЗАХИСТ ВІД ВІД'ЄМНОЇ КІЛЬКОСТІ
+    if (Number(formData.quantity) < 0) {
+      alert("❌ Помилка: Кількість не може бути від'ємною!");
+      return; 
+    }
+
     const finalLocation = formData.locType === 'RB01' 
       ? 'RB01' 
       : `${formData.locFloor}-${formData.locRow}-${formData.locSection}-${formData.locLevel}`;
@@ -103,11 +110,11 @@ function App() {
 
     try {
       if (isEditing) {
-        await axios.put(`https://autopartsais.onrender.com/api/parts/${editId}/`, payload);
+        await axios.put(`https://autopartsais-wms.onrender.com/api/parts/${editId}/`, payload);
         setIsEditing(false);
         setEditId(null);
       } else {
-        await axios.post('https://autopartsais.onrender.com/api/parts/', payload);
+        await axios.post('https://autopartsais-wms.onrender.com/api/parts/', payload);
       }
       setFormData(initialFormState);
       fetchParts();
@@ -132,7 +139,7 @@ function App() {
 
   const handleScanArticleKeyDown = (e) => {
     if (['-', '+', 'e', 'E', '.', ','].includes(e.key)) {
-      e.preventDefault(); // Забороняємо введення недозволених символів
+      e.preventDefault(); 
     }
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -144,7 +151,7 @@ function App() {
     if (!scanLocation.trim() || !scannedPart) return;
     try {
       const updatedPart = { ...scannedPart, location: scanLocation.trim().toUpperCase() };
-      await axios.put(`https://autopartsais.onrender.com/api/parts/${scannedPart.id}/`, updatedPart);
+      await axios.put(`https://autopartsais-wms.onrender.com/api/parts/${scannedPart.id}/`, updatedPart);
       
       alert(`📦 Успішно! "${scannedPart.name}" розміщено в ${scanLocation.toUpperCase()}.`);
       fetchParts();
@@ -158,12 +165,10 @@ function App() {
     }
   };
 
-  // РОЗУМНА МАСКА КОМІРКИ (Літера, Макс 05, Макс 20, Макс 05)
   const handleLocationFormat = (e) => {
     let rawValue = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     let formattedValue = '';
 
-    // 1. Перший символ - літера
     if (rawValue.length > 0) {
       const firstChar = rawValue.charAt(0);
       if (/[A-Z]/.test(firstChar)) {
@@ -175,7 +180,6 @@ function App() {
 
     const digits = rawValue.slice(1).replace(/[^0-9]/g, '');
 
-    // 2. Ряд (макс 05)
     if (digits.length > 0) {
       let block1 = digits.substring(0, 2);
       if (block1.length === 1 && parseInt(block1) > 5) block1 = '05';
@@ -183,7 +187,6 @@ function App() {
       formattedValue += block1;
     }
 
-    // 3. Секція (макс 20)
     if (digits.length > 2) {
       formattedValue += '-';
       let block2 = digits.substring(2, 4);
@@ -191,7 +194,6 @@ function App() {
       formattedValue += block2;
     }
 
-    // 4. Рівень (макс 05)
     if (digits.length > 4) {
       formattedValue += '-';
       let block3 = digits.substring(4, 6);
@@ -257,7 +259,7 @@ function App() {
     const newLocation = `${moveLoc.floor}-${moveLoc.row}-${moveLoc.section}-${moveLoc.level}`;
     try {
       const updatedPart = { ...movingPart, location: newLocation };
-      await axios.put(`https://autopartsais.onrender.com/api/parts/${movingPart.id}/`, updatedPart);
+      await axios.put(`https://autopartsais-wms.onrender.com/api/parts/${movingPart.id}/`, updatedPart);
       setMovingPart(null);
       fetchParts();
     } catch (error) {
@@ -268,7 +270,7 @@ function App() {
   const handleDelete = async (id) => {
     if (window.confirm("Ви впевнені, що хочете списати запис з бази?")) {
       try {
-        await axios.delete(`https://autopartsais.onrender.com/api/parts/${id}/`);
+        await axios.delete(`https://autopartsais-wms.onrender.com/api/parts/${id}/`);
         fetchParts();
       } catch (error) {
         alert("Помилка видалення.");
@@ -277,14 +279,12 @@ function App() {
   };
 
   const filteredParts = parts.filter(part => {
-    // 1. Фільтруємо по вкладках
     let matchesTab = true;
     if (activeTab === 'RB01') matchesTab = part.location === 'RB01';
     if (activeTab === 'PLACED') matchesTab = part.location !== 'RB01';
     
     if (!matchesTab) return false;
 
-    // 2. Застосовуємо пошук для Адміна
     if (user.role === 'ADMIN' && searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
       const nameStr = part.name ? part.name.toLowerCase() : '';
@@ -297,7 +297,6 @@ function App() {
     return true; 
   });
 
-  // ЕКРАН ВХОДУ
   if (!user) {
     return (
       <div className="login-wrapper">
@@ -320,7 +319,6 @@ function App() {
     );
   }
 
-  // ОСНОВНИЙ ІНТЕРФЕЙС
   return (
     <div className="app-container">
       <div className="header-panel">
@@ -336,7 +334,6 @@ function App() {
 
       {user.role === 'ADMIN' && (
         <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: '20px' }}>
-          {/* КЛІКАБЕЛЬНА ШАПКА ШТОРКИ */}
           <div 
             onClick={() => setShowAddForm(!showAddForm)}
             style={{ 
@@ -357,14 +354,13 @@ function App() {
             </span>
           </div>
 
-          {/* САМА ФОРМА (ПОКАЗУЄТЬСЯ ТІЛЬКИ ЯКЩО showAddForm === true) */}
           {showAddForm && (
             <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
               <div className="form-row">
                 <div className="form-group"><label className="form-label">Артикул</label><input name="article" value={formData.article} onChange={handleInputChange} required className="form-control" disabled={isEditing}/></div>
                 <div className="form-group"><label className="form-label">Назва деталі</label><input name="name" value={formData.name} onChange={handleInputChange} required className="form-control" /></div>
                 <div className="form-group"><label className="form-label">Категорія</label><input name="category" value={formData.category} onChange={handleInputChange} required className="form-control" /></div>
-                <div className="form-group"><label className="form-label">Кількість (шт)</label><input name="quantity" type="number" value={formData.quantity} onChange={handleInputChange} required className="form-control" /></div>
+                <div className="form-group"><label className="form-label">Кількість (шт)</label><input name="quantity" type="number" min="0" value={formData.quantity} onChange={handleInputChange} required className="form-control" /></div>
                 
                 <div className="form-group" style={{ flex: '1 1 100%', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
                   <label className="form-label">Місцезнаходження на складі:</label>
@@ -427,9 +423,9 @@ function App() {
               <input 
                 ref={locationInputRef} type="text"
                 value={scanLocation} 
-                onChange={handleLocationFormat} /* ТУТ ПІДКЛЮЧЕНО НОВУ МАСКУ */
+                onChange={handleLocationFormat} 
                 onKeyDown={handleScanLocationKeyDown}
-                placeholder="Комірка (A05-20-05)" /* ТУТ ЗМІНЕНО ПЛЕЙСХОЛДЕР */
+                placeholder="Комірка (A05-20-05)" 
                 className="scanner-input orange"
               />
               <div style={{ display: 'flex', gap: '10px' }}>
@@ -444,7 +440,6 @@ function App() {
       {activeTab !== 'SCANNER' && (
         <div className="table-container">
           
-          {/* БЛОК ПОШУКУ ДЛЯ АДМІНІСТРАТОРА */}
           {user.role === 'ADMIN' && (
             <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
               <input
